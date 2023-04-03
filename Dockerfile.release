@@ -18,7 +18,7 @@ RUN gem install bundler -v $BUNDLER_VERSION
 WORKDIR /app
 
 # Copy Gemfile and Gemfile.lock
-COPY Gemfile Gemfile.lock ./
+COPY *.gemspec Gemfile Gemfile.lock ./
 
 # Install Linux packages to build required gems
 RUN apk add --no-cache \
