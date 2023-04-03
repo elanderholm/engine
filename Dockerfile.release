@@ -1,0 +1,49 @@
+# Dockerfile
+FROM ruby:3.0.0-alpine
+
+# Set Rails environment to development
+ENV RAILS_ENV=development
+
+# Create logs and tmp directories
+RUN mkdir -p /app/log /app/tmp
+
+# Add shared-mime-info package for Linux
+RUN apk add --no-cache shared-mime-info
+
+# Install Bundler version 2.3.10
+ENV BUNDLER_VERSION=2.3.10
+RUN gem install bundler -v $BUNDLER_VERSION
+
+# Set the working directory
+WORKDIR /app
+
+# Copy Gemfile and Gemfile.lock
+COPY Gemfile Gemfile.lock ./
+
+# Install Linux packages to build required gems
+RUN apk add --no-cache \
+    build-base \
+    libxml2-dev \
+    libxslt-dev \
+    postgresql-dev \
+    tzdata \
+    git \
+    nodejs \
+    yarn \
+    chromium-chromedriver \
+    && apk add --no-cache --virtual .build-deps \
+    ruby-dev \
+    && gem update --system \
+    && gem install bundler \
+    && bundle config set --local without 'development test' \
+    && bundle install --jobs $(nproc) \
+    && apk del .build-deps
+
+# Copy the application code
+COPY . .
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Start the application
+CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
